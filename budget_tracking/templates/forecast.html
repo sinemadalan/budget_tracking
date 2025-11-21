@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast | Budget Analyse</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif;}
+        body {background: linear-gradient(135deg, #e8f0f8, #cfd9e6); min-height:100vh;}
+        .page-wrapper {display:flex; min-height:100vh;}
+        .sidebar {width:250px; background:#0f3e71; color:white; padding:20px 0;}
+        .sidebar-header {text-align:center; font-weight:bold; font-size:1.2em; margin-bottom:20px;}
+        .sidebar ul {list-style:none; padding:0;}
+        .sidebar ul li a {display:flex; align-items:center; padding:15px 20px; color:white; text-decoration:none;}
+        .sidebar ul li a i {margin-right:10px;}
+        .sidebar ul li a:hover, .sidebar ul li.active a {background:#53719d; color:#e8f0f8;}
+        .main-content {flex-grow:1; padding:20px;}
+        header {display:flex; justify-content:center; align-items:center; margin-bottom:30px;}
+        header h1 {color:#0f3e71;}
+        .container {max-width:1100px; margin:0 auto;}
+        .card {background:white; border-radius:16px; padding:20px; margin-bottom:20px; box-shadow:0 6px 25px rgba(0,0,0,0.1);}
+        .card h2 {margin-bottom:15px; color:#0f3e71;}
+        canvas {background:#fff; border-radius:16px; padding:10px;}
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+    <div class="sidebar">
+        <div class="sidebar-header">Budget Analyse</div>
+        <ul>
+            <li><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="{{ url_for('get_expenses') }}"><i class="fas fa-wallet"></i> Expenses</a></li>
+            <li class="active"><a href="{{ url_for('forecast') }}"><i class="fas fa-chart-line"></i> Forecast</a></li>
+            <li><a href="{{ url_for('analysis') }}"><i class="fas fa-lightbulb"></i> Analysis & Tips</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>Forecast – Harcama Tahmini</h1>
+        </header>
+
+        <div class="container">
+            <!-- Mevcut Ay Harcamaları -->
+            <div class="card">
+                <h2>{{ current_month_name }} Harcamaları</h2>
+                <ul>
+                    {% for cat, amount in current_month_expenses.items() %}
+                        <li>{{ cat }}: ₺{{ "%.2f"|format(amount) }}</li>
+                    {% endfor %}
+                </ul>
+                <p><b>Toplam:</b> ₺{{ "%.2f"|format(total_current) }}</p>
+            </div>
+
+            <!-- Tahminler -->
+            <div class="card">
+                <h2>{{ next_month_name }} Tahmini</h2>
+                <canvas id="categoryChart"></canvas>
+                <p style="text-align:center; margin-top:10px;"><b>Toplam Tahmin:</b> ₺{{ "%.2f"|format(total_predicted) }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var kategoriLabels = JSON.parse('{{ predicted_expenses.keys()|list|tojson|safe }}');
+    var kategoriValues = JSON.parse('{{ predicted_expenses.values()|list|tojson|safe }}');
+
+    var ctx = document.getElementById('categoryChart').getContext('2d');
+    var categoryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: kategoriLabels,
+            datasets: [{
+                label: 'Tahmini Gider (₺)',
+                data: kategoriValues,
+                backgroundColor: 'rgba(33, 92, 155, 0.7)',
+                borderColor: 'rgba(33, 92, 155, 1)',
+                borderWidth: 1,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display:false },
+                title: {
+                    display: true,
+                    text: 'Kategori Bazlı Tahmin',
+                    font: { size:18 }
+                },
+                tooltip: { mode:'index', intersect:false }
+            },
+            scales: {
+                y: {
+                    beginAtZero:true,
+                    ticks: { stepSize:200 }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses | Budget Analyse</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e8f0f8, #cfd9e6);
+            min-height: 100vh;
+        }
+
+        /* HEADER STYLES (main-content içinde yer alacak) */
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+            padding: 15px 0;
+            background: transparent;
+            box-shadow: none;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: #0f3e71;
+            text-align: center;
+        }
+
+        h2 {
+            color: #0f3e71;
+        }
+
+        /* Profil dropdown */
+        .profile-container {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #0f3e71;
+            padding: 5px 10px;
+            border-radius: 8px;
+            justify-content: flex-end;
+        }
+
+        .profile-btn:hover {
+            background-color: #e8f0f8;
+            color: #225c9b;
+        }
+
+        .profile-btn img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background-color: white;
+            min-width: 120px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .dropdown-menu form {
+            margin: 0;
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            text-align: right;
+            cursor: pointer;
+            font-size: 14px;
+            color: #e74c3c;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f2f2f2;
+        }
+
+        /* SIDEBAR VE İÇERİK YAPILARI */
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #0f3e71;
+            color: white;
+            padding: 20px 0;
+            min-height: 100vh;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            position: static;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 0 20px 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: white;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .sidebar ul li a i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background: #53719d;
+            color: #e8f0f8;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .form-container,
+        .table-container,
+        .filter-container {
+            /* Yeni filtre konteyneri eklendi */
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Filtre Formu Stilleri */
+        .filter-container form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-container input,
+        .filter-container select {
+            padding: 10px;
+            border: 1px solid #cbd3df;
+            border-radius: 8px;
+            width: 200px;
+            /* Filtre inputlarının sabit genişliği */
+        }
+
+        /* Genel Input/Select/Button Stilleri */
+        input,
+        select {
+            padding: 10px;
+            border: 1px solid #cbd3df;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #225c9b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #4d85c1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #cbd3df;
+            text-align: left;
+        }
+
+        th {
+            background: #e8f0f8;
+            color: #225c9b;
+        }
+
+        .btn-action {
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+
+        .delete {
+            background: #a12d2d;
+            color: white;
+        }
+
+        .delete:hover {
+            background: #e74c3c;
+        }
+
+        .form-container h2 {
+            color: #0f3e71;
+            margin-bottom: 10px;
+        }
+
+        .table-container h2 {
+            color: #0f3e71;
+            margin-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .form-container form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-container form input,
+        .form-container form select {
+            width: 24%;
+            margin-right: 0;
+        }
+
+        .form-container form button {
+            margin-top: 0;
+            width: auto;
+            align-self: flex-end;
+        }
+
+        .month-wrapper {
+            position: relative;
+            width: 200px;
+            display: inline-block;
+        }
+
+        .month-wrapper input[type="month"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd3df;
+            border-radius: 8px;
+            box-sizing: border-box;
+            color: transparent;
+            caret-color: black;
+        }
+
+        .month-wrapper.has-value input[type="month"] {
+            color: black;
+        }
+
+        .month-placeholder {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #9aa3b1;
+            font-size: 14px;
+
+            /* Kesin çözüm: tüm tarayıcılarda seçimi kapat */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .month-wrapper.has-value .month-placeholder {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-wrapper">
+
+        <div class="sidebar">
+            <div class="sidebar-header">
+                Budget Analyse
+            </div>
+            <ul>
+                <li>
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="{{ url_for('get_expenses') }}">
+                        <i class="fas fa-wallet"></i> Expenses (Current)
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('forecast') }}">
+                        <i class="fas fa-chart-line"></i> Forecast
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('analysis') }}">
+                        <i class="fas fa-lightbulb"></i> Analysis & Tips
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="main-content">
+
+            <header>
+                <h1>Manage Your Expenses</h1>
+
+                <div class="profile-container" onclick="toggleDropdown()">
+                    <button class="profile-btn" id="profileBtn">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1144/1144760.png" alt="Profile Icon">
+                        {{ current_user.username }}
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <form action="{{ url_for('logout') }}" method="POST">
+                            <button type="submit">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <div class="container">
+
+                <div class="form-container">
+                    <h2>Add New Expense</h2>
+                    <form method="POST" action="{{ url_for('add_expense') }}">
+                        <input type="text" name="category" placeholder="Category" required>
+                        <input type="number" step="1" name="amount" placeholder="Amount" required>
+                        <input type="text" id="dateInput" name="date" placeholder="DD.MM.YYYY" required>
+                        <input type="text" name="note" placeholder="Note (optional)">
+                        <button type="submit">Add Expense</button>
+                    </form>
+                </div>
+
+                <div class="filter-container">
+                    <h2>Filter Expenses</h2>
+
+                    <form method="GET" action="{{ url_for('get_expenses') }}">
+                        <!-- CATEGORY -->
+                        <select name="category">
+                            <option value="" disabled {% if not filter_category %}selected{% endif %} hidden>
+                                Category
+                            </option>
+                            {% for category in categories %}
+                            <option value="{{ category }}" {% if filter_category==category %}selected{% endif %}>
+                                {{ category }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        
+                        <!--MIN AMOUNT-->
+                        <div class="col-md-6">
+                            <input type="number" class="form-control" name="min_amount" placeholder="Minimum Amount"
+                                value="{{ min_amount if min_amount is not none }}">
+                        </div>
+
+                        <!--MAX AMOUNT-->
+                        <div class="col-md-6">
+                            <input type="number" class="form-control" name="max_amount" placeholder="Maximum Amount"
+                                value="{{ max_amount if max_amount is not none }}">
+                        </div>
+                        
+                        <!-- MONTH -->
+                        <div class="month-wrapper">
+                            <input id="monthInput" type="month" name="month"
+                                value="{{ filter_month if filter_month is not none }}">
+                            <span class="month-placeholder">Month</span>
+                        </div>
+
+                        <!-- APPLY BTN -->
+                        <button type="submit">Apply Filter</button>
+
+                        <!-- RESET BTN -->
+                        {% if filter_category or filter_month or min_amount or max_amount %}
+                        <a href="{{ url_for('get_expenses') }}">
+                            <button type="button" style="background: #e74c3c; width: auto; margin: 0;">
+                                Reset Filters
+                            </button>
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+                <div class="table-container">
+                    <h2>Your Expenses</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Note</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                            <tr>
+                                <td>{{ expense.category }}</td>
+                                <td>₺{{ "%.2f"|format(expense.amount) }}</td>
+                                <td>{{ expense.date.strftime("%d.%m.%Y") }}</td>
+                                <td>{{ expense.note }}</td>
+                                <td>
+                                    <form style="display:inline;" method="POST"
+                                        action="{{ url_for('delete_expense', expense_id=expense.id) }}">
+                                        <button type="submit" class="btn-action delete">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if not expenses %}
+                    <p style="text-align: center; padding: 10px; color: #555;">No expenses found matching the current
+                        criteria.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        flatpickr("#dateInput", {
+            dateFormat: "d.m.Y",
+            allowInput: true
+        });
+
+        // NOT: Logout butonunun genişliğini ayarlayan JS kodunu buraya eklemeyi unutmayın!
+        function toggleDropdown() {
+            const button = document.getElementById('profileBtn');
+            const menu = document.getElementById('dropdownMenu');
+
+            // Eğer kapalıysa, açmadan önce genişliği ayarla
+            if (menu.style.display === 'none' || menu.style.display === '') {
+                const buttonWidth = button.offsetWidth;
+                menu.style.width = buttonWidth + 'px';
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        window.onclick = function (event) {
+            if (!event.target.closest('.profile-btn') && !event.target.closest('.dropdown-menu')) {
+                const menu = document.getElementById('dropdownMenu');
+                if (menu) menu.style.display = 'none';
+            }
+        }
+
+        window.onresize = function () {
+            const button = document.getElementById('profileBtn');
+            const menu = document.getElementById('dropdownMenu');
+            if (menu && menu.style.display === 'block') {
+                const buttonWidth = button.offsetWidth;
+                menu.style.width = buttonWidth + 'px';
+            }
+        }
+
+        // placeholder label'ını durumuna göre gizle/göster
+        function updateMonthPlaceholder() {
+            const inp = document.getElementById('monthInput');
+            if (!inp) return;
+            const wrapper = inp.parentElement;
+            if (inp.value && inp.value !== '') {
+                wrapper.classList.add('has-value');
+            } else {
+                wrapper.classList.remove('has-value');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateMonthPlaceholder();
+            const inp = document.getElementById('monthInput');
+            if (inp) {
+                // kullanıcı elle seçtiğinde veya tarayıcı value set ettiğinde güncelle
+                inp.addEventListener('input', updateMonthPlaceholder);
+                inp.addEventListener('change', updateMonthPlaceholder);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

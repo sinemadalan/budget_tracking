@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Budget Analyse</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e8f0f8, #cfd9e6);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            color: #2b3a55;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7a8ba0;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #2b3a55;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd3df;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: #3178c6;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            background-color: #225c9b;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #5489c1;
+        }
+
+        .switch-link {
+            margin-top: 18px;
+            font-size: 14px;
+        }
+
+        .switch-link a {
+            color: #3178c6;
+            text-decoration: none;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Flash mesaj stili */
+        .flash-message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .flash-message:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .danger { background-color: #fde2e4; color: #a12d2d; }
+        .success { background-color: #d4edda; color: #1f4620; }
+        .info { background-color: #e0f0ff; color: #054a91; }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                width: 90px;
+                height: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <img src="{{ url_for('static', filename='images/budget.png') }}" alt="Budget Analyse Logo" class="logo">
+
+        <!-- Flash mesajlar -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2>Welcome!</h2>
+        <p class="subtitle">Log in to your account</p>
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Log In</button>
+        </form>
+
+        <p class="switch-link">
+            Don't have an account? <a href="{{ url_for('register') }}">Register</a>
+        </p>
+    </div>
+
+    <script>
+        function togglePassword(id) {
+            const passwordInput = document.getElementById(id);
+            passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+</body>
+</html>

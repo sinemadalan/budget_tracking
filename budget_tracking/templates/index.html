@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Analyse</title>
+<style>
+    * {margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif;}
+    body {
+        background: linear-gradient(135deg, #e8f0f8, #cfd9e6);
+        min-height: 100vh;
+        padding: 20px;
+    }
+    header {
+        text-align:center;
+        margin-bottom:30px;
+        position: relative;
+    }
+    header h1 {color:#225c9b;}
+    header p {color:#3178c6; margin-top:5px;}
+
+    .logout-form {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+    }
+    .logout-btn {
+        background-color:#c0392b;
+        color:white;
+        border:none;
+        padding:8px 14px;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:bold;
+        transition: background 0.3s;
+    }
+    .logout-btn:hover {background-color:#e74c3c;}
+
+    .container {display:flex; flex-wrap:wrap; gap:20px; justify-content:center;}
+    .card {
+        background:white;
+        border-radius:16px;
+        box-shadow:0 6px 25px rgba(0,0,0,0.1);
+        padding:20px;
+        width:250px;
+        text-align:center;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow:0 10px 30px rgba(0,0,0,0.15);
+    }
+    .card h2 {color:#225c9b; margin-bottom:10px;}
+    .card p {color:#3178c6; font-weight:500; font-size:18px;}
+    .btn {
+        display:inline-block;
+        margin-top:15px;
+        padding:10px 20px;
+        background:#225c9b;
+        color:white;
+        text-decoration:none;
+        border-radius:8px;
+        font-weight:bold;
+        transition: background 0.3s;
+    }
+    .btn:hover {background:#5489c1;}
+</style>
+</head>
+<body>
+
+<header>
+    {% if current_user.is_authenticated %}
+        <h1>Welcome, {{ current_user.username }}!</h1>
+        <p>Your personal budget dashboard</p>
+        <form action="{{ url_for('logout') }}" method="post" class="logout-form">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    {% endif %}
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>Total Expenses</h2>
+        <p>₺0.00</p>
+        <a href="{{ url_for('get_expenses') }}" class="btn">View Expenses</a>
+    </div>
+    <div class="card">
+        <h2>Next Month Forecast</h2>
+        <p>₺0.00</p>
+        <a href="#" class="btn">See Forecast</a>
+    </div>
+    <div class="card">
+        <h2>Analysis & Tips</h2>
+        <p>Check your spending habits</p>
+        <a href="#" class="btn">View Advice</a>
+    </div>
+</div>
+
+</body>
+</html>

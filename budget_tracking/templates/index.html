@@ -1,100 +1,348 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Budget Analyse</title>
-<style>
-    * {margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif;}
-    body {
-        background: linear-gradient(135deg, #e8f0f8, #cfd9e6);
-        min-height: 100vh;
-        padding: 20px;
-    }
-    header {
-        text-align:center;
-        margin-bottom:30px;
-        position: relative;
-    }
-    header h1 {color:#225c9b;}
-    header p {color:#3178c6; margin-top:5px;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Budget Analyse</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    .logout-form {
-        position: absolute;
-        top: 10px;
-        right: 20px;
-    }
-    .logout-btn {
-        background-color:#c0392b;
-        color:white;
-        border:none;
-        padding:8px 14px;
-        border-radius:8px;
-        cursor:pointer;
-        font-weight:bold;
-        transition: background 0.3s;
-    }
-    .logout-btn:hover {background-color:#e74c3c;}
+    <style>
+        /* --- GLOBAL & RESET --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
 
-    .container {display:flex; flex-wrap:wrap; gap:20px; justify-content:center;}
-    .card {
-        background:white;
-        border-radius:16px;
-        box-shadow:0 6px 25px rgba(0,0,0,0.1);
-        padding:20px;
-        width:250px;
-        text-align:center;
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow:0 10px 30px rgba(0,0,0,0.15);
-    }
-    .card h2 {color:#225c9b; margin-bottom:10px;}
-    .card p {color:#3178c6; font-weight:500; font-size:18px;}
-    .btn {
-        display:inline-block;
-        margin-top:15px;
-        padding:10px 20px;
-        background:#225c9b;
-        color:white;
-        text-decoration:none;
-        border-radius:8px;
-        font-weight:bold;
-        transition: background 0.3s;
-    }
-    .btn:hover {background:#5489c1;}
-</style>
+        body {
+            background-color: #f3f6f9;
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- ARKA PLAN EFEKTLERİ --- */
+        .background-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            filter: blur(60px);
+            opacity: 0.5;
+            animation: moveShape 25s infinite alternate;
+            border-radius: 50%;
+        }
+
+        .shape-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #dce4ef; }
+        .shape-2 { bottom: 10%; right: -5%; width: 400px; height: 400px; background: #e0eafc; }
+        .shape-3 { bottom: 40%; left: 30%; width: 300px; height: 300px; background: #e8f0fe; }
+
+        @keyframes moveShape {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(30px, 30px) scale(1.1); }
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .brand-logo img { height: 40px; width: auto; margin-right: 12px; }
+        .brand-logo span { font-size: 1.5rem; font-weight: 700; color: #0f3e71; letter-spacing: 0.5px; }
+
+        .profile-btn {
+            display: flex; align-items: center; background: rgba(255,255,255,0.8);
+            border: 1px solid #e1e5ea; font-size: 14px; font-weight: 500; color: #0f3e71;
+            padding: 8px 20px; border-radius: 30px; transition: all 0.3s ease; cursor: pointer;
+        }
+        .profile-btn:hover { background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .profile-btn img { width: 32px; height: 32px; border-radius: 50%; margin-right: 10px; }
+
+        .dropdown-menu {
+            display: none; position: absolute; right: 0; top: 60px;
+            background: white; min-width: 160px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); z-index: 100; padding: 5px;
+        }
+        .dropdown-menu button {
+            width: 100%; padding: 12px; border: none; background: none; text-align: left;
+            cursor: pointer; color: #e74c3c; display: flex; align-items: center; border-radius: 8px;
+        }
+        .dropdown-menu button:hover { background: #fceceb; }
+        .dropdown-menu button:before { content: '\f2f5'; font-family: "Font Awesome 6 Free"; font-weight: 900; margin-right: 10px; }
+
+        /* --- HERO SECTION --- */
+        .main-container {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 60px 20px 20px 20px; /* Alt padding azaltıldı */
+            max-width: 1200px; margin: 0 auto; width: 100%;
+            flex-grow: 1; /* Sayfanın ortasını doldurması için */
+        }
+
+        .hero-text { text-align: center; margin-bottom: 60px; animation: slideDown 0.8s ease; }
+        .hero-text h1 {
+            font-size: 3rem; margin-bottom: 15px; font-weight: 800;
+            background: linear-gradient(135deg, #0f3e71 0%, #225c9b 100%);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            color: #0f3e71;
+        }
+        .hero-text p { font-size: 1.15rem; color: #555; max-width: 650px; margin: 0 auto; line-height: 1.6; }
+
+        /* --- CARDS GRID --- */
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px; width: 100%; animation: fadeInUp 1s ease; margin-bottom: 80px;
+        }
+
+        .nav-card {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+            border-radius: 24px; padding: 40px 30px; text-align: center; text-decoration: none; color: #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.8);
+            transition: all 0.4s ease; display: flex; flex-direction: column; align-items: center;
+        }
+        .nav-card:hover { transform: translateY(-15px); box-shadow: 0 25px 50px rgba(15, 62, 113, 0.1); background: white; }
+
+        .icon-circle {
+            width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin-bottom: 25px; transition: transform 0.4s ease;
+        }
+        .card-expenses .icon-circle { background: #e8f0fe; color: #1967d2; }
+        .card-forecast .icon-circle { background: #fce8e6; color: #c5221f; }
+        .card-analysis .icon-circle { background: #fef7e0; color: #f29900; }
+        .nav-card:hover .icon-circle { transform: scale(1.1) rotate(10deg); }
+
+        .nav-card h2 { font-size: 1.5rem; color: #0f3e71; margin-bottom: 10px; font-weight: 700; }
+        .nav-card p { color: #666; margin-bottom: 30px; line-height: 1.6; }
+        .btn-go {
+            margin-top: auto; color: #0f3e71; font-weight: 600; padding: 10px 30px;
+            border-radius: 30px; background: rgba(15, 62, 113, 0.05); transition: all 0.3s;
+        }
+        .nav-card:hover .btn-go { background: #0f3e71; color: white; }
+
+        /* --- INFO SECTION --- */
+        .info-section {
+            max-width: 1200px;
+            margin: 0 auto 80px auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            padding: 0 20px;
+            align-items: center;
+        }
+
+        .info-text h2 { font-size: 2rem; color: #0f3e71; margin-bottom: 20px; }
+        .info-text p { color: #555; line-height: 1.8; margin-bottom: 20px; font-size: 1.05rem; }
+        .info-features { list-style: none; padding: 0; }
+        .info-features li { margin-bottom: 15px; display: flex; align-items: center; font-weight: 500; color: #333; }
+        .info-features li i { color: #225c9b; margin-right: 15px; background: #e8f0fe; padding: 10px; border-radius: 50%; }
+
+        .info-visual {
+            background: white; padding: 30px; border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); display: flex;
+            justify-content: center; align-items: center; position: relative;
+        }
+        .visual-mockup {
+            width: 100%; height: 250px;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 50%, rgba(34, 92, 155, 0.05) 100%);
+            border-bottom: 2px solid #e1e5ea;
+            display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 0;
+        }
+        .bar { width: 40px; border-radius: 5px 5px 0 0; animation: growBar 1.5s ease forwards; }
+        .bar-1 { height: 40%; background: #4facfe; animation-delay: 0.2s; }
+        .bar-2 { height: 70%; background: #00f2fe; animation-delay: 0.4s; }
+        .bar-3 { height: 50%; background: #43e97b; animation-delay: 0.6s; }
+        .bar-4 { height: 85%; background: #fa709a; animation-delay: 0.8s; }
+
+        @keyframes growBar { from { height: 0; } }
+
+        /* --- STATS SECTION (LACİVERT ALAN - EN ALTA TAŞINDI) --- */
+        .stats-section {
+            width: 100%;
+            background: #0f3e71;
+            /* Padding azaltıldı: 50px -> 30px */
+            padding: 30px 20px; 
+            color: white;
+            /* Margin kaldırıldı, footera yapışsın */
+            margin-bottom: 0; 
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.1); /* Gölge yukarı vursun */
+            position: relative;
+            z-index: 2;
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
+            text-align: center;
+        }
+
+        .stat-item h3 { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; color: #4facfe; }
+        .stat-item p { font-size: 0.95rem; opacity: 0.8; font-weight: 500; }
+
+        /* --- FOOTER --- */
+        footer {
+            text-align: center; padding: 20px; color: #777; font-size: 0.85rem;
+            background: #f8f9fa; /* Footera hafif gri fon */
+            border-top: 1px solid #eee; width: 100%;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .info-section { grid-template-columns: 1fr; text-align: center; }
+            .info-features li { justify-content: center; }
+            .navbar { padding: 15px 20px; }
+            .brand-logo span { display: none; }
+        }
+    </style>
 </head>
+
 <body>
 
-<header>
-    {% if current_user.is_authenticated %}
-        <h1>Welcome, {{ current_user.username }}!</h1>
-        <p>Your personal budget dashboard</p>
-        <form action="{{ url_for('logout') }}" method="post" class="logout-form">
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
-    {% endif %}
-</header>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
 
-<div class="container">
-    <div class="card">
-        <h2>Total Expenses</h2>
-        <p>₺0.00</p>
-        <a href="{{ url_for('get_expenses') }}" class="btn">View Expenses</a>
+    <nav class="navbar">
+        <a href="#" class="brand-logo">
+            <img src="{{ url_for('static', filename='images/budget_sidebar.png') }}" alt="Logo">
+            <span>Budget Analyse</span>
+        </a>
+
+        <div class="profile-container" onclick="toggleDropdown()">
+            <div class="profile-btn">
+                <img src="https://cdn-icons-png.flaticon.com/512/1144/1144760.png" alt="Profile Icon">
+                {{ current_user.username }} <i class="fas fa-chevron-down" style="margin-left: 8px; font-size: 10px;"></i>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <form action="{{ url_for('logout') }}" method="POST">
+                    <button type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+
+        <div class="hero-text">
+            <h1>Welcome back, {{ current_user.username }}!</h1>
+            <p>Track your spending, forecast future expenses, and analyze your financial habits all in one place.</p>
+        </div>
+
+        <div class="cards-grid">
+            <a href="{{ url_for('get_expenses') }}" class="nav-card card-expenses">
+                <div class="icon-circle"><i class="fas fa-wallet"></i></div>
+                <h2>Expenses</h2>
+                <p>Manage your daily transactions. View history, add new expenses, and filter your records.</p>
+                <div class="btn-go">Go to Expenses</div>
+            </a>
+
+            <a href="{{ url_for('forecast') }}" class="nav-card card-forecast">
+                <div class="icon-circle"><i class="fas fa-chart-line"></i></div>
+                <h2>Forecast</h2>
+                <p>See what's coming. AI-powered predictions for next month's budget based on your history.</p>
+                <div class="btn-go">View Forecast</div>
+            </a>
+
+            <a href="{{ url_for('analysis') }}" class="nav-card card-analysis">
+                <div class="icon-circle"><i class="fas fa-lightbulb"></i></div>
+                <h2>Analysis & Tips</h2>
+                <p>Get smarter with your money. Detailed visual analysis and personalized saving tips.</p>
+                <div class="btn-go">Get Insights</div>
+            </a>
+        </div>
     </div>
-    <div class="card">
-        <h2>Next Month Forecast</h2>
-        <p>₺0.00</p>
-        <a href="#" class="btn">See Forecast</a>
+
+    <div class="info-section">
+        <div class="info-text">
+            <h2>Why Use Budget Analyse?</h2>
+            <p>Take control of your financial future with our advanced tools. We combine simple tracking with powerful machine learning.</p>
+            <ul class="info-features">
+                <li><i class="fas fa-check"></i> Real-time expense tracking</li>
+                <li><i class="fas fa-check"></i> Visual monthly reports</li>
+                <li><i class="fas fa-check"></i> Personalized saving advice</li>
+            </ul>
+        </div>
+        
+        <div class="info-visual">
+            <div class="visual-mockup">
+                <div class="bar bar-1"></div>
+                <div class="bar bar-2"></div>
+                <div class="bar bar-3"></div>
+                <div class="bar bar-4"></div>
+            </div>
+        </div>
     </div>
-    <div class="card">
-        <h2>Analysis & Tips</h2>
-        <p>Check your spending habits</p>
-        <a href="#" class="btn">View Advice</a>
+
+    <div class="stats-section">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h3>100%</h3>
+                <p>Secure Data</p>
+            </div>
+            <div class="stat-item">
+                <h3>24/7</h3>
+                <p>Access Anytime</p>
+            </div>
+            <div class="stat-item">
+                <h3>AI</h3>
+                <p>Smart Forecast</p>
+            </div>
+        </div>
     </div>
-</div>
+
+    <footer>
+        <p>&copy; 2024 Budget Analyse App. Designed for better financial health.</p>
+    </footer>
+
+    <script>
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        window.onclick = function (event) {
+            if (!event.target.closest('.profile-container')) {
+                document.getElementById('dropdownMenu').style.display = 'none';
+            }
+        }
+    </script>
 
 </body>
 </html>

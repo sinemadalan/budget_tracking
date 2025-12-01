@@ -1,108 +1,618 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forecast | Budget Analyse</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        * {margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif;}
-        body {background: linear-gradient(135deg, #e8f0f8, #cfd9e6); min-height:100vh;}
-        .page-wrapper {display:flex; min-height:100vh;}
-        .sidebar {width:250px; background:#0f3e71; color:white; padding:20px 0;}
-        .sidebar-header {text-align:center; font-weight:bold; font-size:1.2em; margin-bottom:20px;}
-        .sidebar ul {list-style:none; padding:0;}
-        .sidebar ul li a {display:flex; align-items:center; padding:15px 20px; color:white; text-decoration:none;}
-        .sidebar ul li a i {margin-right:10px;}
-        .sidebar ul li a:hover, .sidebar ul li.active a {background:#53719d; color:#e8f0f8;}
-        .main-content {flex-grow:1; padding:20px;}
-        header {display:flex; justify-content:center; align-items:center; margin-bottom:30px;}
-        header h1 {color:#0f3e71;}
-        .container {max-width:1100px; margin:0 auto;}
-        .card {background:white; border-radius:16px; padding:20px; margin-bottom:20px; box-shadow:0 6px 25px rgba(0,0,0,0.1);}
-        .card h2 {margin-bottom:15px; color:#0f3e71;}
-        canvas {background:#fff; border-radius:16px; padding:10px;}
+        /* --- GLOBAL & RESET --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f3f6f9, #dce4ef);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* --- HEADER STYLES --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            width: 100%;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px; /* Başlık ile form arası boşluk */
+        }
+
+        header h1 {
+            color: #0f3e71;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        /* --- MODERN MONTH SELECTOR (TOOLBAR) --- */
+        .month-selector {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 5px 5px 5px 20px; /* Yazı için soldan boşluk, buton için sağdan az boşluk */
+            border-radius: 50px; /* Hap şeklinde tam yuvarlak */
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); /* Yumuşak gölge */
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            width: fit-content; /* İçerik kadar genişle */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .month-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* "Reference Month:" Yazısı */
+        .month-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #64748b; /* Göz yormayan gri */
+            margin-right: 5px;
+            white-space: nowrap; /* Alt satıra geçmesini engelle */
+            cursor: default;
+        }
+
+        /* Input Alanı (Çerçevesiz) */
+        .month-selector input {
+            border: none;
+            background: transparent; /* Arkaplan şeffaf */
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f3e71;
+            width: 140px;
+            padding: 5px;
+            outline: none; /* Tıklayınca çıkan mavi çerçeveyi kaldır */
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+        }
+
+        /* Buton */
+        .month-selector button {
+            padding: 10px 24px;
+            background: #0f3e71;
+            color: white;
+            border: none;
+            border-radius: 30px; /* Buton da yuvarlak */
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 5px; 
+        }
+
+        .month-selector button:hover {
+            background: #225c9b;
+        }
+
+        /* --- PROFILE DROPDOWN (Diğer sayfalarla aynı) --- */
+        .profile-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #e1e5ea;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f3e71;
+            padding: 8px 15px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .profile-btn:hover {
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .profile-btn img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 55px;
+            background-color: white;
+            min-width: 150px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            color: #e74c3c;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-menu button:before {
+            content: '\f2f5';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            margin-right: 8px;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #fceceb;
+        }
+
+        /* --- SIDEBAR --- */
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #0f3e71 0%, #0a2a4d 100%);
+            color: white;
+            padding: 30px 0;
+            flex-shrink: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.2em;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-logo {
+            height: 40px;
+            width: auto;
+            margin-right: 12px;
+            object-fit: contain;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 16px 25px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 15px;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar ul li a i {
+            margin-right: 15px;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-left-color: #4facfe;
+            padding-left: 30px;
+        }
+
+        .sidebar ul li a:hover i {
+            transform: scale(1.2);
+        }
+
+        /* --- MAIN CONTENT & GRID --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); 
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* --- CARDS (BOXES) --- */
+        .box {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%; 
+        }
+
+        .box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .box h3 {
+            margin-bottom: 15px;
+            color: #0f3e71;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 2px solid #f0f2f5;
+            padding-bottom: 10px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- SUMMARY BOXES --- */
+        .summary-box {
+            padding: 30px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #225c9b, #4a8ad4); 
+            color: white;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(34, 92, 155, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .summary-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(34, 92, 155, 0.3);
+        }
+
+        .summary-box h2 {
+            margin: 0;
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-box p {
+            margin-top: 10px;
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+            .box[style*="grid-column: span 2"] { grid-column: span 1 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .page-wrapper { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; }
+            header { flex-direction: column; gap: 15px; }
+            .profile-container { align-self: flex-end; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
+
 <body>
-<div class="page-wrapper">
-    <div class="sidebar">
-        <div class="sidebar-header">Budget Analyse</div>
-        <ul>
-            <li><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
-            <li><a href="{{ url_for('get_expenses') }}"><i class="fas fa-wallet"></i> Expenses</a></li>
-            <li class="active"><a href="{{ url_for('forecast') }}"><i class="fas fa-chart-line"></i> Forecast</a></li>
-            <li><a href="{{ url_for('analysis') }}"><i class="fas fa-lightbulb"></i> Analysis & Tips</a></li>
-        </ul>
-    </div>
+    <div class="page-wrapper">
 
-    <div class="main-content">
-        <header>
-            <h1>Forecast – Harcama Tahmini</h1>
-        </header>
-
-        <div class="container">
-            <!-- Mevcut Ay Harcamaları -->
-            <div class="card">
-                <h2>{{ current_month_name }} Harcamaları</h2>
-                <ul>
-                    {% for cat, amount in current_month_expenses.items() %}
-                        <li>{{ cat }}: ₺{{ "%.2f"|format(amount) }}</li>
-                    {% endfor %}
-                </ul>
-                <p><b>Toplam:</b> ₺{{ "%.2f"|format(total_current) }}</p>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/budget_sidebar.png') }}" 
+                     alt="Budget Logo" 
+                     class="sidebar-logo">
+                <span>Budget Analyse</span>
             </div>
+            <ul>
+                <li><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="{{ url_for('get_expenses') }}"><i class="fas fa-wallet"></i> Expenses</a></li>
+                <li class="active"><a href="{{ url_for('forecast') }}"><i class="fas fa-chart-line"></i> Forecast</a></li>
+                <li><a href="{{ url_for('analysis') }}"><i class="fas fa-lightbulb"></i> Analysis & Tips</a></li>
+            </ul>
+        </div>
 
-            <!-- Tahminler -->
-            <div class="card">
-                <h2>{{ next_month_name }} Tahmini</h2>
-                <canvas id="categoryChart"></canvas>
-                <p style="text-align:center; margin-top:10px;"><b>Toplam Tahmin:</b> ₺{{ "%.2f"|format(total_predicted) }}</p>
+        <div class="main-content">
+            <header>
+                <div class="header-left">
+                    <h1>{{ next_month_name }} Forecast</h1>
+                    
+                    <form action="{{ url_for('forecast') }}" method="GET" class="month-selector">
+                        <span class="month-label">Reference Month:</span>
+                        
+                        <input id="monthPicker" type="text" name="selected_month" value="{{ selected_month }}" placeholder="Select Month" required>
+                        
+                        <button type="submit">
+                            Update <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="profile-container" onclick="toggleDropdown()">
+                    <button class="profile-btn" id="profileBtn">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1144/1144760.png" alt="Profile Icon">
+                        {{ current_user.username }} <i class="fas fa-chevron-down" style="margin-left: 8px; font-size: 10px;"></i>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <form action="{{ url_for('logout') }}" method="POST">
+                            <button type="submit">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <div class="grid">
+                    <div class="summary-box">
+                        <h2>Spending in {{ selected_month_name }}</h2>
+                        <p>{{ total_current }} ₺</p>
+                    </div>
+                    <div class="summary-box" style="background: linear-gradient(135deg, #e67e22, #f39c12);">
+                        <h2>{{ next_month_name }} Forecast</h2>
+                        <p>{{ total_predicted }} ₺</p>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <div class="box">
+                        <h3>Category Predictions</h3>
+                        <div class="chart-container">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="box">
+                        <h3>Forecast Distribution (%)</h3>
+                        <div class="chart-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="box" style="grid-column: span 2;">
+                        <h3>Comparison: {{ selected_month_name }} vs. Forecast</h3>
+                        <div class="chart-container">
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
-</div>
 
-<script>
-    var kategoriLabels = JSON.parse('{{ predicted_expenses.keys()|list|tojson|safe }}');
-    var kategoriValues = JSON.parse('{{ predicted_expenses.values()|list|tojson|safe }}');
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
-    var ctx = document.getElementById('categoryChart').getContext('2d');
-    var categoryChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: kategoriLabels,
-            datasets: [{
-                label: 'Tahmini Gider (₺)',
-                data: kategoriValues,
-                backgroundColor: 'rgba(33, 92, 155, 0.7)',
-                borderColor: 'rgba(33, 92, 155, 1)',
-                borderWidth: 1,
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display:false },
-                title: {
-                    display: true,
-                    text: 'Kategori Bazlı Tahmin',
-                    font: { size:18 }
-                },
-                tooltip: { mode:'index', intersect:false }
+    <script>
+        // --- FLATPICKR KURULUMU ---
+        flatpickr("#monthPicker", {
+            plugins: [
+                new monthSelectPlugin({
+                    shorthand: true, 
+                    dateFormat: "Y-m", 
+                    altFormat: "F Y", 
+                    theme: "light"
+                })
+            ],
+            defaultDate: "{{ selected_month }}", 
+            static: true 
+        });
+
+        // --- CHART JS VERİLERİ ---
+        const chartData = {
+            categories: JSON.parse('{{ categories|tojson|safe }}'),
+            currentMonth: JSON.parse('{{ current_month_expenses|tojson|safe }}'),
+            predicted: JSON.parse('{{ predicted_expenses|tojson|safe }}')
+        };
+
+        const currentValues = chartData.categories.map(cat => chartData.currentMonth[cat]);
+        const predictedValues = chartData.categories.map(cat => chartData.predicted[cat]);
+
+        // Font ayarları
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        Chart.defaults.color = '#666';
+
+        // BAR CHART
+        new Chart(document.getElementById("barChart"), {
+            type: 'bar',
+            data: {
+                labels: chartData.categories,
+                datasets: [{
+                    label: '{{ next_month_name }} Forecast',
+                    data: predictedValues,
+                    borderWidth: 0,
+                    borderRadius: 6,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    hoverBackgroundColor: 'rgba(54, 162, 235, 1)'
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero:true,
-                    ticks: { stepSize:200 }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                    x: { grid: { display: false } }
+                } 
+            }
+        });
+
+        // PIE CHART
+        new Chart(document.getElementById("pieChart"), {
+            type: 'pie',
+            data: {
+                labels: chartData.categories,
+                datasets: [{
+                    data: predictedValues,
+                    backgroundColor: [
+                        '#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#fee140', '#a18cd1',
+                        '#ff9a9e', '#fbc2eb', '#8fd3f4', '#84fab0'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false, 
+                layout: { padding: 0 },
+                plugins: {
+                    legend: {
+                        display: true, 
+                        position: 'top', 
+                        align: 'center',
+                        labels: { usePointStyle: true, boxWidth: 8, padding: 15, font: { size: 11 } }
+                    }
                 }
             }
+        });
+
+        // LINE CHART
+        new Chart(document.getElementById("lineChart"), {
+            type: 'line',
+            data: {
+                labels: chartData.categories,
+                datasets: [
+                    { 
+                        label: '{{ selected_month_name }} Spending', 
+                        data: currentValues, 
+                        borderWidth: 3, 
+                        borderColor: '#0f3e71',
+                        backgroundColor: '#0f3e71',
+                        tension: 0.4,
+                        pointRadius: 4
+                    },
+                    { 
+                        label: '{{ next_month_name }} Forecast', 
+                        data: predictedValues, 
+                        borderWidth: 3, 
+                        borderColor: '#e67e22',
+                        backgroundColor: '#e67e22',
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: '#f0f0f0' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Profile dropdown
+        function toggleDropdown() {
+            const button = document.getElementById('profileBtn');
+            const menu = document.getElementById('dropdownMenu');
+            if (menu.style.display === 'none' || menu.style.display === '') {
+                const buttonWidth = button.offsetWidth;
+                menu.style.width = buttonWidth + 'px';
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
         }
-    });
-</script>
+
+        window.onclick = function (event) {
+            if (!event.target.closest('.profile-btn') && !event.target.closest('.dropdown-menu')) {
+                const menu = document.getElementById('dropdownMenu');
+                if (menu) menu.style.display = 'none';
+            }
+        }
+
+        window.onresize = function () {
+            const button = document.getElementById('profileBtn');
+            const menu = document.getElementById('dropdownMenu');
+            if (menu && menu.style.display === 'block') {
+                const buttonWidth = button.offsetWidth;
+                menu.style.width = buttonWidth + 'px';
+            }
+        }
+    </script>
 
 </body>
 </html>

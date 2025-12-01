@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,30 +23,29 @@
 
         .auth-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
             background: #ffffff;
             border-radius: 16px;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
-            padding: 40px 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            padding: 50px 40px;
             text-align: center;
         }
 
         .logo {
-            width: 120px;
-            height: 120px;
+            width: 150px;
+            height: 150px;
             object-fit: contain;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2b3a55;
+            margin-bottom: 12px;
         }
 
         h2 {
             color: #2b3a55;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #7a8ba0;
-            font-size: 14px;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         .input-group {
@@ -55,15 +55,19 @@
 
         label {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 16px;
+            /* label büyütüldü */
             color: #2b3a55;
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 14px;
+            /* input padding artırıldı */
+            font-size: 16px;
+            /* font boyutu artırıldı */
             border: 1px solid #cbd3df;
             border-radius: 8px;
             outline: none;
@@ -91,7 +95,10 @@
             background-color: #225c9b;
             color: white;
             border: none;
-            padding: 10px;
+            padding: 14px;
+            /* buton yüksekliği artırıldı */
+            font-size: 16px;
+            /* buton yazısı büyütüldü */
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
@@ -104,7 +111,8 @@
 
         .switch-link {
             margin-top: 18px;
-            font-size: 14px;
+            font-size: 16px;
+            /* link yazısı büyütüldü */
         }
 
         .switch-link a {
@@ -119,9 +127,11 @@
         /* Flash mesaj stili */
         .flash-message {
             margin-bottom: 15px;
-            padding: 12px 15px;
+            padding: 14px 18px;
+            /* padding artırıldı */
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 16px;
+            /* font büyütüldü */
             font-weight: 500;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
@@ -129,40 +139,64 @@
 
         .flash-message:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
-        .danger { background-color: #fde2e4; color: #a12d2d; }
-        .success { background-color: #d4edda; color: #1f4620; }
-        .info { background-color: #e0f0ff; color: #054a91; }
+        .danger {
+            background-color: #fde2e4;
+            color: #a12d2d;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #1f4620;
+        }
+
+        .info {
+            background-color: #e0f0ff;
+            color: #054a91;
+        }
 
         @media (max-width: 480px) {
             .auth-container {
-                padding: 30px 20px;
+                padding: 35px 25px;
             }
 
             .logo {
-                width: 90px;
-                height: 90px;
+                width: 110px;
+                height: 110px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            .subtitle,
+            label,
+            input,
+            .btn,
+            .switch-link {
+                font-size: 14px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="auth-container">
         <img src="{{ url_for('static', filename='images/budget.png') }}" alt="Budget Analyse Logo" class="logo">
 
         <!-- Flash mesajlar -->
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
-        <h2>Welcome!</h2>
-        <p class="subtitle">Log in to your account</p>
+        <h1>Welcome!</h1>
+        <h2>Log in to your account</h2> 
 
         <form method="POST" action="{{ url_for('login') }}">
             <div class="input-group">
@@ -193,4 +227,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis | Budget Analyse</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f3f6f9, #dce4ef);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* HEADER & SELECTOR */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            width: 100%;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        header h1 {
+            color: #0f3e71;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 5px 5px 5px 20px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            width: fit-content;
+            transition: transform 0.3s ease;
+        }
+
+        .month-selector:hover {
+            transform: translateY(-2px);
+        }
+
+        .month-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-right: 5px;
+            cursor: default;
+        }
+
+        .month-selector input {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f3e71;
+            width: 140px;
+            padding: 5px;
+            outline: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .month-selector button {
+            padding: 10px 24px;
+            background: #0f3e71;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 5px;
+        }
+
+        .month-selector button:hover {
+            background: #225c9b;
+        }
+
+        /* SIDEBAR */
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #0f3e71 0%, #0a2a4d 100%);
+            color: white;
+            padding: 30px 0;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px 1px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .sidebar-logo {
+            height: 40px;
+            width: auto;
+            margin-right: 12px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 16px 25px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 15px;
+            transition: 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar ul li a i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-left-color: #4facfe;
+            padding-left: 30px;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* GRID SYSTEM */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* CARDS */
+        .card,
+        .chart-box,
+        .tips-box {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: transform 0.3s;
+            height: 100%;
+            /* Yükseklikleri eşitlemek için */
+        }
+
+        .card:hover,
+        .chart-box:hover,
+        .tips-box:hover {
+            transform: translateY(-5px);
+        }
+
+        h3 {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 2px solid #f0f2f5;
+            padding-bottom: 10px;
+        }
+
+        /* INFO CARDS CONTENT */
+        .amount-big {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0f3e71;
+        }
+
+        /* ÖZELLİK 2: KIYASLAMA BADGE STİLİ */
+        .comparison-badge {
+            font-size: 0.85rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .text-danger {
+            color: #e74c3c;
+            background: #fdedec;
+        }
+
+        .text-success {
+            color: #27ae60;
+            background: #eafaf1;
+        }
+
+        .text-muted {
+            color: #95a5a6;
+            background: #f4f6f7;
+        }
+
+        /* TIPS LIST (Eski Ferah Tasarım) */
+        .tips-box {
+            padding: 30px;
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border-left: 5px solid #ccc;
+            transition: transform 0.2s;
+        }
+
+        .tip-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .tip-item:hover {
+            transform: translateX(5px);
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .tip-icon {
+            min-width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 15px;
+            font-size: 18px;
+            background-color: #ccc;
+        }
+
+        .tip-content h4 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .tip-content p {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* ÖZELLİK 3: PROGRESS BARS */
+        .progress-item {
+            margin-bottom: 15px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .progress-bg {
+            width: 100%;
+            height: 10px;
+            background: #f0f2f5;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        /* PROFILE */
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #e1e5ea;
+            padding: 8px 15px;
+            border-radius: 30px;
+        }
+
+        .profile-btn img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 55px;
+            background: white;
+            min-width: 150px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 5px;
+            z-index: 100;
+        }
+
+        @media (max-width: 900px) {
+
+            .grid-3,
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/budget_sidebar.png') }}" class="sidebar-logo">
+                <span>Budget Analyse</span>
+            </div>
+            <ul>
+                <li><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="{{ url_for('get_expenses') }}"><i class="fas fa-wallet"></i> Expenses</a></li>
+                <li><a href="{{ url_for('forecast') }}"><i class="fas fa-chart-line"></i> Forecast</a></li>
+                <li class="active"><a href="{{ url_for('analysis') }}"><i class="fas fa-lightbulb"></i> Analysis &
+                        Tips</a></li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <header>
+                <div class="header-left">
+                    <h1>Analysis & Tips</h1>
+                    <form action="{{ url_for('analysis') }}" method="GET" class="month-selector">
+                        <span class="month-label">Analyze Month:</span>
+                        <input id="monthPicker" type="text" name="selected_month" value="{{ selected_month }}"
+                            placeholder="Select Month" required>
+                        <button type="submit">Analyze <i class="fas fa-search"></i></button>
+                    </form>
+                </div>
+                <div class="profile-container" onclick="toggleDropdown()">
+                    <button class="profile-btn" id="profileBtn">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1144/1144760.png" alt="Profile Icon"> {{
+                        current_user.username }} <i class="fas fa-chevron-down" style="margin-left: 8px;"></i>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <form action="{{ url_for('logout') }}" method="POST"><button type="submit"
+                                style="width:100%; border:none; background:none; text-align:left; padding:10px; color:#e74c3c; cursor:pointer;">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <div class="container">
+
+                <div class="grid-3">
+                    <div class="card">
+                        <h3>Total Spent</h3>
+                        <div class="amount-big">{{ total_spent }} ₺</div>
+                        <div class="comparison-badge {{ comparison_class }}">
+                            <i class="fas {{ comparison_icon }}"></i> {{ comparison_text }}
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Highest Category</h3>
+                        <div class="amount-big" style="color: #c0392b;">{{ highest_category }}</div>
+                        <div style="color: #64748b; margin-top:5px;">{{ highest_amount }} ₺</div>
+                    </div>
+
+                    <div class="card"
+                        style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border:none;">
+                        <h3 style="color: rgba(255,255,255,0.9);">Potential Savings</h3>
+                        <div class="amount-big" style="color: white;">{{ potential_savings }} ₺</div>
+                        <div style="font-size:0.85rem; opacity:0.9; margin-top:5px;">if you cut top 2 expenses by 10%
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="chart-box">
+                        <h3>Category Breakdown</h3>
+                        <div style="width: 100%; height: 300px; display:flex; justify-content:center;">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="tips-box">
+                        <h3>Smart Insights</h3>
+                        {% if tips %}
+                        {% for tip in tips %}
+                        <div class="tip-item" data-color="{{ tip.color }}">
+                            <div class="tip-icon"><i class="fas {{ tip.icon }}"></i></div>
+                            <div class="tip-content">
+                                <h4>{{ tip.title }}</h4>
+                                <p>{{ tip.desc|safe }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p style="text-align:center; color:#999; margin-top:50px;">No insights available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="chart-box">
+                        <h3>Daily Spending Trend</h3>
+                        <div style="width: 100%; height: 280px;">
+                            <canvas id="dailyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Budget Distribution</h3>
+                        <div style="height: 280px; overflow-y: auto; padding-right: 10px;">
+                            {% if category_data %}
+                            {% for cat, amount in category_data.items() %}
+                            {% set percent = (amount / total_spent * 100)|round|int %}
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <span>{{ cat }}</span>
+                                    <span>{{ amount }}₺ ({{ percent }}%)</span>
+                                </div>
+                                <div class="progress-bg">
+                                    <div class="progress-fill" data-width="{{ percent }}"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p style="color:#999;">No data available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. İpuçları Renklendirme
+            document.querySelectorAll('.tip-item').forEach(item => {
+                const color = item.getAttribute('data-color');
+                if (color) {
+                    item.style.borderLeftColor = color;
+                    item.querySelector('.tip-icon').style.backgroundColor = color;
+                }
+            });
+
+            // 2. Progress Bar Animasyonu
+            const colors = ['#3498db', '#e74c3c', '#f1c40f', '#2ecc71', '#9b59b6', '#34495e', '#1abc9c', '#e67e22'];
+            document.querySelectorAll('.progress-fill').forEach((bar, index) => {
+                const width = bar.getAttribute('data-width');
+                if (width) {
+                    setTimeout(() => { bar.style.width = width + '%'; }, 200);
+                }
+                bar.style.backgroundColor = colors[index % colors.length];
+            });
+        });
+
+        // 3. Flatpickr
+        flatpickr("#monthPicker", {
+            plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y", theme: "light" })],
+            defaultDate: "{{ selected_month }}",
+            static: true
+        });
+
+        // 4. Pie Chart
+        const ctxPie = document.getElementById('categoryChart').getContext('2d');
+        const pieLabels = JSON.parse('{{ chart_labels|tojson|safe }}');
+        const pieValues = JSON.parse('{{ chart_values|tojson|safe }}');
+
+        if (pieLabels.length > 0) {
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: pieLabels,
+                    datasets: [{
+                        data: pieValues,
+                        backgroundColor: ['#3498db', '#e74c3c', '#f1c40f', '#2ecc71', '#9b59b6', '#34495e', '#1abc9c'],
+                        borderWidth: 2, borderColor: '#ffffff'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 15 } } } }
+            });
+        }
+
+        // 5. Line Chart (Günlük Trend)
+        const ctxDaily = document.getElementById('dailyChart').getContext('2d');
+        const dailyLabels = JSON.parse('{{ daily_labels|tojson|safe }}');
+        const dailyValues = JSON.parse('{{ daily_values|tojson|safe }}');
+
+        if (dailyLabels.length > 0) {
+            let gradient = ctxDaily.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(15, 62, 113, 0.3)');
+            gradient.addColorStop(1, 'rgba(15, 62, 113, 0.0)');
+
+            new Chart(ctxDaily, {
+                type: 'line',
+                data: {
+                    labels: dailyLabels,
+                    datasets: [{
+                        label: 'Spending (₺)',
+                        data: dailyValues,
+                        borderColor: '#0f3e71',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#0f3e71',
+                        pointRadius: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        window.onclick = function (e) { if (!e.target.closest('.profile-container')) document.getElementById('dropdownMenu').style.display = 'none'; }
+    </script>
+</body>
+
+</html>

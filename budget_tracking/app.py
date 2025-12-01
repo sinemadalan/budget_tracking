@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,6 +6,8 @@ import urllib
 from datetime import datetime
 import calendar
 from sqlalchemy import extract, func
+import pandas as pd
+import numpy as np
 
 # Flask setup
 app = Flask(__name__)
@@ -117,68 +119,349 @@ def index():
     return render_template('index.html', username=current_user.username)
 
 # Logout route
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['GET', 'POST']) 
 @login_required
 def logout():
+    session.pop('_flashes', None)
     logout_user()
     flash("Successfully logged out.", "info")
+    
     return redirect(url_for('login'))
 
+from prophet import Prophet
+import pandas as pd
+
+# ==========================
+# Forecast Route (GÜNCELLENMİŞ KISIM)
+# ==========================
 @app.route('/forecast')
 @login_required
 def forecast():
-    today = datetime.today()
-    current_month = today.month
-    current_month_name = calendar.month_name[current_month]
+    # 1. KULLANICININ SEÇTİĞİ TARİHİ AL (Yoksa Bugünü Al)
+    selected_month_str = request.args.get('selected_month')
 
-    # Bir sonraki ay
-    next_month = current_month + 1 if current_month < 12 else 1
-    next_month_name = calendar.month_name[next_month]
+    if selected_month_str:
+        try:
+            # "2025-10" formatından yıl ve ayı ayır
+            year, month = map(int, selected_month_str.split('-'))
+            current_date = datetime(year, month, 1)
+        except ValueError:
+            # Hata olursa bugüne dön
+            today = datetime.today()
+            current_date = datetime(today.year, today.month, 1)
+    else:
+        # Seçim yoksa varsayılan olarak bugünün tarihini al
+        today = datetime.today()
+        current_date = datetime(today.year, today.month, 1)
 
-    # --- 1. Kullanıcının kategorilerini DB'den çek ---
-    categories = (
-        db.session.query(Expense.category)
+    # 2. GELECEK AYI HESAPLA (Tahmin yapılacak hedef ay)
+    if current_date.month == 12:
+        next_month_date = datetime(current_date.year + 1, 1, 1)
+    else:
+        next_month_date = datetime(current_date.year, current_date.month + 1, 1)
+
+    # HTML'de göstermek için isimler (Örn: "October", "November")
+    selected_month_name = current_date.strftime("%B") 
+    next_month_name = next_month_date.strftime("%B")
+    
+    # Input alanında seçili kalsın diye value formatı (YYYY-MM)
+    selected_month_val = current_date.strftime("%Y-%m")
+
+    # 3. VERİTABANINDAN TÜM GİDERLERİ ÇEK
+    expenses = (
+        db.session.query(Expense)
         .filter_by(user_id=current_user.id)
-        .distinct()
+        .order_by(Expense.date)
         .all()
     )
-    categories = [c[0] for c in categories]
 
-    # --- 2. Mevcut ay harcamalarını kategori bazlı çek ---
+    # Veri yoksa boş döndür
+    if not expenses:
+        flash("Forecast için yeterli veri yok!", "warning")
+        return render_template('forecast.html', 
+                               next_month_name=next_month_name, 
+                               selected_month=selected_month_val,
+                               selected_month_name=selected_month_name,
+                               total_current=0,
+                               total_predicted=0,
+                               categories=[],
+                               current_month_expenses={},
+                               predicted_expenses={})
+
+    categories = list({e.category for e in expenses})
+
+    # Veriyi Pandas DataFrame'e çevir
+    df = pd.DataFrame([
+        {"ds": e.date, "y": e.amount, "category": e.category}
+        for e in expenses
+    ])
+    df['ds'] = pd.to_datetime(df['ds'])
+
+    # 4. TAHMİN MANTIĞI (KRİTİK GÜNCELLEME)
+    # Modelin "geleceği görmesini" engellemek için veriyi seçilen tarihe göre kesiyoruz.
+    cutoff_date = pd.Timestamp(next_month_date) 
+    df_history = df[df['ds'] < cutoff_date].copy()
+
+    predicted_expenses = {}
+
+    # --- Kategori Bazlı Tahmin ---
+    for cat in categories:
+        # Sadece geçmiş veriyi (df_history) kullan
+        df_cat = df_history[df_history["category"] == cat][["ds", "y"]]
+
+        if df_cat.empty:
+            predicted_expenses[cat] = 0
+            continue
+
+        # Aylık toplama (Resample)
+        df_cat = df_cat.set_index('ds').resample('M').sum().dropna().reset_index()
+
+        # Prophet için en az 2 veri noktası gerekir
+        if len(df_cat) < 2:
+            last_val = float(df_cat['y'].iloc[-1]) if not df_cat.empty else 0
+            predicted_expenses[cat] = round(last_val, 2)
+            continue
+
+        try:
+            # Log transformation (daha kararlı tahmin için)
+            df_cat['y_log'] = np.log1p(df_cat['y'])
+            df_prophet = df_cat[['ds', 'y_log']].rename(columns={'y_log': 'y'})
+
+            model = Prophet(yearly_seasonality=False, daily_seasonality=False, weekly_seasonality=False)
+            model.fit(df_prophet)
+            
+            # Gelecek 1 ayı tahmin et
+            future = model.make_future_dataframe(periods=1, freq='M')
+            forecast_df = model.predict(future)
+            
+            # Log'u geri çevir (Inverse log transform)
+            next_month_estimate = np.expm1(forecast_df.iloc[-1]['yhat'])
+            predicted_expenses[cat] = round(next_month_estimate, 2)
+        except Exception:
+            # Model hata verirse son değeri kullan
+            predicted_expenses[cat] = round(float(df_cat['y'].iloc[-1]), 2)
+
+    # --- Toplam Tahmin (Total Forecast) ---
+    # Yine sadece df_history kullanıyoruz
+    df_total = df_history.groupby('ds')['y'].sum().reset_index()
+    df_total['ds'] = pd.to_datetime(df_total['ds'])
+    df_total = df_total.set_index('ds').resample('M').sum().dropna().reset_index()
+
+    if len(df_total) >= 2:
+        try:
+            df_total['y_log'] = np.log1p(df_total['y'])
+            df_prophet_total = df_total[['ds', 'y_log']].rename(columns={'y_log': 'y'})
+
+            model_total = Prophet(yearly_seasonality=False, daily_seasonality=False, weekly_seasonality=False)
+            model_total.fit(df_prophet_total)
+            future_total = model_total.make_future_dataframe(periods=1, freq='M')
+            forecast_total = model_total.predict(future_total)
+            total_predicted = round(np.expm1(forecast_total.iloc[-1]['yhat']), 2)
+        except Exception:
+            total_predicted = round(float(df_total['y'].iloc[-1]), 2)
+    else:
+        total_predicted = round(float(df_total['y'].iloc[-1]) if not df_total.empty else 0, 2)
+
+    # 5. MEVCUT AY HARCAMALARI (Actuals)
+    # Kullanıcının SEÇTİĞİ ayın gerçek harcamalarını çekiyoruz
     current_month_expenses = {}
     for cat in categories:
         total = (
             db.session.query(func.sum(Expense.amount))
             .filter_by(user_id=current_user.id, category=cat)
-            .filter(extract('month', Expense.date) == current_month)
+            .filter(extract('year', Expense.date) == current_date.year)  # Dinamik Yıl
+            .filter(extract('month', Expense.date) == current_date.month) # Dinamik Ay
             .scalar()
         )
         current_month_expenses[cat] = total or 0
 
     total_current = sum(current_month_expenses.values())
 
-    # --- 3. Basit tahmin modeli: %5 artış ---
-    predicted_expenses = {cat: amt * 1.05 for cat, amt in current_month_expenses.items()}
-    total_predicted = sum(predicted_expenses.values())
-
     return render_template(
         'forecast.html',
         username=current_user.username,
-        current_month_name=current_month_name,
+        categories=categories,
         current_month_expenses=current_month_expenses,
         total_current=total_current,
-        next_month_name=next_month_name,
         predicted_expenses=predicted_expenses,
-        total_predicted=total_predicted
+        total_predicted=total_predicted,
+        next_month_name=next_month_name,
+        selected_month=selected_month_val,      # Formda göstermek için (value="2025-10")
+        selected_month_name=selected_month_name # Başlıklarda göstermek için (October)
     )
 
-# Analysis & Tips Route
+# ==========================
+# Analysis & Tips Route (GÜNCELLENMİŞ)
+# ==========================
 @app.route('/analysis')
 @login_required
 def analysis():
-    # Buraya harcama analizleri ve tasarruf ipuçları mantığı gelecek.
-    return render_template('analysis.html', username=current_user.username)
-# --- YENİ EKLENEN SİDEBAR ROTALARI SONU ---
+    # 1. TARİH SEÇİMİ
+    selected_month_str = request.args.get('selected_month')
+
+    if selected_month_str:
+        try:
+            year, month = map(int, selected_month_str.split('-'))
+            current_date = datetime(year, month, 1)
+        except ValueError:
+            today = datetime.today()
+            current_date = datetime(today.year, today.month, 1)
+    else:
+        today = datetime.today()
+        current_date = datetime(today.year, today.month, 1)
+
+    selected_month_name = current_date.strftime("%B")
+    selected_month_val = current_date.strftime("%Y-%m")
+
+    # 2. SEÇİLEN AYIN VERİLERİ (KATEGORİ BAZLI)
+    category_totals = (
+        db.session.query(Expense.category, func.sum(Expense.amount))
+        .filter_by(user_id=current_user.id)
+        .filter(extract('year', Expense.date) == current_date.year)
+        .filter(extract('month', Expense.date) == current_date.month)
+        .group_by(Expense.category)
+        .all()
+    )
+    
+    # Veriyi dictionary formatına çevir: {'Food': 500, 'Rent': 2000}
+    data = {cat: amount for cat, amount in category_totals}
+    total_spent = sum(data.values())
+
+    # --- ÖZELLİK 2: GEÇEN AY İLE KIYASLAMA (Comparison) ---
+    # Önceki ayın tarihini hesapla
+    if current_date.month == 1:
+        prev_month_date = datetime(current_date.year - 1, 12, 1)
+    else:
+        prev_month_date = datetime(current_date.year, current_date.month - 1, 1)
+    
+    # Önceki ayın toplam harcamasını çek
+    prev_total = (
+        db.session.query(func.sum(Expense.amount))
+        .filter_by(user_id=current_user.id)
+        .filter(extract('year', Expense.date) == prev_month_date.year)
+        .filter(extract('month', Expense.date) == prev_month_date.month)
+        .scalar()
+    ) or 0
+
+    # Kıyaslama Mantığı
+    comparison_text = "No previous data"
+    comparison_class = "text-muted"
+    comparison_icon = "fa-minus"
+
+    if prev_total > 0:
+        diff = total_spent - prev_total
+        percent = (diff / prev_total) * 100
+        
+        if diff > 0:
+            # Harcama artmış (Kötü)
+            comparison_text = f"+{round(percent)}% vs last month"
+            comparison_class = "text-danger" 
+            comparison_icon = "fa-arrow-up"
+        else:
+            # Harcama azalmış (İyi)
+            comparison_text = f"{round(percent)}% vs last month"
+            comparison_class = "text-success"
+            comparison_icon = "fa-arrow-down"
+
+    # --- ÖZELLİK 1: GÜNLÜK HARCAMA TRENDİ (Line Chart) ---
+    daily_expenses_query = (
+        db.session.query(extract('day', Expense.date), func.sum(Expense.amount))
+        .filter_by(user_id=current_user.id)
+        .filter(extract('year', Expense.date) == current_date.year)
+        .filter(extract('month', Expense.date) == current_date.month)
+        .group_by(extract('day', Expense.date))
+        .all()
+    )
+    
+    # Ayın kaç çektiğini bul (28, 30, 31?)
+    days_in_month = calendar.monthrange(current_date.year, current_date.month)[1]
+    
+    # Sorgudan gelen veriyi sözlüğe çevir: {1: 100, 5: 250...}
+    daily_dict = {int(day): amt for day, amt in daily_expenses_query}
+    
+    # 1'den ay sonuna kadar tüm günleri doldur (Harcama yoksa 0)
+    daily_labels = [str(i) for i in range(1, days_in_month + 1)]
+    daily_values = [daily_dict.get(i, 0) for i in range(1, days_in_month + 1)]
+
+    # 3. İPUÇLARI OLUŞTURMA
+    tips = []
+    highest_category = "-"
+    highest_amount = 0
+    potential_savings = 0
+
+    if data:
+        highest_category = max(data, key=data.get)
+        highest_amount = data[highest_category]
+
+        # Tip 1: En yüksek harcama
+        tips.append({
+            'icon': 'fa-exclamation-triangle',
+            'color': '#e74c3c', # Kırmızı
+            'title': 'Highest Spending Alert',
+            'desc': f"Your highest spending is in <strong>{highest_category}</strong> with <strong>{highest_amount}₺</strong>."
+        })
+
+        # Tip 2: Tasarruf Planı (En yüksek 2 kalemi %10 kısma)
+        sorted_cats = sorted(data.items(), key=lambda item: item[1], reverse=True)
+        top_2_savings = 0
+        for i in range(min(2, len(sorted_cats))):
+            top_2_savings += sorted_cats[i][1] * 0.10
+        
+        potential_savings = top_2_savings
+
+        tips.append({
+            'icon': 'fa-piggy-bank',
+            'color': '#27ae60', # Yeşil
+            'title': 'Smart Saving Opportunity',
+            'desc': f"If you reduce your top 2 expenses by just 10%, you could save approximately <strong>{round(top_2_savings)}₺</strong>."
+        })
+        
+        # Tip 3: Günlük Ortalama
+        daily_avg = total_spent / days_in_month
+        tips.append({
+            'icon': 'fa-chart-area',
+            'color': '#2980b9', # Mavi
+            'title': 'Daily Average',
+            'desc': f"You are spending an average of <strong>{round(daily_avg)}₺</strong> per day in {selected_month_name}."
+        })
+
+    else:
+        tips.append({
+            'icon': 'fa-info-circle',
+            'color': '#7f8c8d',
+            'title': 'No Data',
+            'desc': f"No expenses found for {selected_month_name}."
+        })
+
+    return render_template(
+        'analysis.html',
+        username=current_user.username,
+        selected_month=selected_month_val,
+        selected_month_name=selected_month_name,
+        
+        # Genel İstatistikler
+        total_spent=total_spent,
+        highest_category=highest_category,
+        highest_amount=highest_amount,
+        potential_savings=round(potential_savings),
+        
+        # Özellik 2: Kıyaslama Verileri
+        comparison_text=comparison_text,
+        comparison_class=comparison_class,
+        comparison_icon=comparison_icon,
+        
+        # Özellik 1: Günlük Grafik Verileri
+        daily_labels=daily_labels,
+        daily_values=daily_values,
+        
+        # Özellik 3 & Pasta Grafik: Kategori Verileri
+        category_data=data, # Progress barlar için sözlük
+        chart_labels=list(data.keys()), # Pasta grafik etiketleri
+        chart_values=list(data.values()), # Pasta grafik değerleri
+        
+        # İpuçları
+        tips=tips
+    )
 
 # ==========================
 # Expenses CRUD routes

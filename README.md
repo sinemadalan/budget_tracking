@@ -192,7 +192,7 @@ created_at
 
 ## 🚀 Installation & Setup
 ### Clone the repository
-git clone https://github.com/yourusername/budget-tracking-system.git
+git clone https://github.com/sinemadalan/budget_tracking.git
 
 ### Create virtual environment
 python -m venv venv

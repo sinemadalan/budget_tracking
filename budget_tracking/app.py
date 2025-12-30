@@ -115,7 +115,6 @@ def login():
 @app.route('/index')
 @login_required
 def index():
-    # Buraya Ana Sayfa (Dashboard) mantığınız gelecek.
     return render_template('index.html', username=current_user.username)
 
 # Logout route
@@ -132,17 +131,16 @@ from prophet import Prophet
 import pandas as pd
 
 # ==========================
-# Forecast Route (GÜNCELLENMİŞ KISIM)
+# Forecast Route 
 # ==========================
 @app.route('/forecast')
 @login_required
 def forecast():
-    # 1. KULLANICININ SEÇTİĞİ TARİHİ AL (Yoksa Bugünü Al)
+    # KULLANICININ SEÇTİĞİ TARİHİ AL (Yoksa Bugünü Al)
     selected_month_str = request.args.get('selected_month')
 
     if selected_month_str:
         try:
-            # "2025-10" formatından yıl ve ayı ayır
             year, month = map(int, selected_month_str.split('-'))
             current_date = datetime(year, month, 1)
         except ValueError:
@@ -154,20 +152,20 @@ def forecast():
         today = datetime.today()
         current_date = datetime(today.year, today.month, 1)
 
-    # 2. GELECEK AYI HESAPLA (Tahmin yapılacak hedef ay)
+    # GELECEK AYI HESAPLA (Tahmin yapılacak hedef ay)
     if current_date.month == 12:
         next_month_date = datetime(current_date.year + 1, 1, 1)
     else:
         next_month_date = datetime(current_date.year, current_date.month + 1, 1)
 
-    # HTML'de göstermek için isimler (Örn: "October", "November")
+    # HTML'de göstermek için isimler
     selected_month_name = current_date.strftime("%B") 
     next_month_name = next_month_date.strftime("%B")
     
-    # Input alanında seçili kalsın diye value formatı (YYYY-MM)
+    # Input alanında seçili kalsın diye value formatı
     selected_month_val = current_date.strftime("%Y-%m")
 
-    # 3. VERİTABANINDAN TÜM GİDERLERİ ÇEK
+    # VERİTABANINDAN TÜM GİDERLERİ ÇEK
     expenses = (
         db.session.query(Expense)
         .filter_by(user_id=current_user.id)
@@ -177,7 +175,7 @@ def forecast():
 
     # Veri yoksa boş döndür
     if not expenses:
-        flash("Forecast için yeterli veri yok!", "warning")
+        flash("There is not enough data for the forecast!", "warning")
         return render_template('forecast.html', 
                                next_month_name=next_month_name, 
                                selected_month=selected_month_val,
@@ -190,15 +188,14 @@ def forecast():
 
     categories = list({e.category for e in expenses})
 
-    # Veriyi Pandas DataFrame'e çevir
     df = pd.DataFrame([
         {"ds": e.date, "y": e.amount, "category": e.category}
         for e in expenses
     ])
     df['ds'] = pd.to_datetime(df['ds'])
 
-    # 4. TAHMİN MANTIĞI (KRİTİK GÜNCELLEME)
-    # Modelin "geleceği görmesini" engellemek için veriyi seçilen tarihe göre kesiyoruz.
+    # TAHMİN MANTIĞI 
+    # Modelin overfittingini engellemek için veriyi seçilen tarihe göre kesiyoruz.
     cutoff_date = pd.Timestamp(next_month_date) 
     df_history = df[df['ds'] < cutoff_date].copy()
 
@@ -216,7 +213,7 @@ def forecast():
         # Aylık toplama (Resample)
         df_cat = df_cat.set_index('ds').resample('M').sum().dropna().reset_index()
 
-        # Prophet için en az 2 veri noktası gerekir
+        # Prophet için en az 2 veri noktası gerekli
         if len(df_cat) < 2:
             last_val = float(df_cat['y'].iloc[-1]) if not df_cat.empty else 0
             predicted_expenses[cat] = round(last_val, 2)
@@ -262,7 +259,7 @@ def forecast():
     else:
         total_predicted = round(float(df_total['y'].iloc[-1]) if not df_total.empty else 0, 2)
 
-    # 5. MEVCUT AY HARCAMALARI (Actuals)
+    # MEVCUT AY HARCAMALARI (Actuals)
     # Kullanıcının SEÇTİĞİ ayın gerçek harcamalarını çekiyoruz
     current_month_expenses = {}
     for cat in categories:
@@ -286,17 +283,17 @@ def forecast():
         predicted_expenses=predicted_expenses,
         total_predicted=total_predicted,
         next_month_name=next_month_name,
-        selected_month=selected_month_val,      # Formda göstermek için (value="2025-10")
-        selected_month_name=selected_month_name # Başlıklarda göstermek için (October)
+        selected_month=selected_month_val,      
+        selected_month_name=selected_month_name 
     )
 
 # ==========================
-# Analysis & Tips Route (GÜNCELLENMİŞ)
+# Analysis & Tips Route 
 # ==========================
 @app.route('/analysis')
 @login_required
 def analysis():
-    # 1. TARİH SEÇİMİ
+    # TARİH SEÇİMİ
     selected_month_str = request.args.get('selected_month')
 
     if selected_month_str:
@@ -313,7 +310,7 @@ def analysis():
     selected_month_name = current_date.strftime("%B")
     selected_month_val = current_date.strftime("%Y-%m")
 
-    # 2. SEÇİLEN AYIN VERİLERİ (KATEGORİ BAZLI)
+    # SEÇİLEN AYIN VERİLERİ (KATEGORİ BAZLI)
     category_totals = (
         db.session.query(Expense.category, func.sum(Expense.amount))
         .filter_by(user_id=current_user.id)
@@ -327,7 +324,7 @@ def analysis():
     data = {cat: amount for cat, amount in category_totals}
     total_spent = sum(data.values())
 
-    # --- ÖZELLİK 2: GEÇEN AY İLE KIYASLAMA (Comparison) ---
+    # --- GEÇEN AY İLE KIYASLAMA (Comparison) ---
     # Önceki ayın tarihini hesapla
     if current_date.month == 1:
         prev_month_date = datetime(current_date.year - 1, 12, 1)
@@ -363,7 +360,7 @@ def analysis():
             comparison_class = "text-success"
             comparison_icon = "fa-arrow-down"
 
-    # --- ÖZELLİK 1: GÜNLÜK HARCAMA TRENDİ (Line Chart) ---
+    # --- GÜNLÜK HARCAMA TRENDİ (Line Chart) ---
     daily_expenses_query = (
         db.session.query(extract('day', Expense.date), func.sum(Expense.amount))
         .filter_by(user_id=current_user.id)
@@ -383,7 +380,7 @@ def analysis():
     daily_labels = [str(i) for i in range(1, days_in_month + 1)]
     daily_values = [daily_dict.get(i, 0) for i in range(1, days_in_month + 1)]
 
-    # 3. İPUÇLARI OLUŞTURMA
+    # İPUÇLARI OLUŞTURMA
     tips = []
     highest_category = "-"
     highest_amount = 0

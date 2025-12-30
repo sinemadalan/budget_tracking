@@ -206,7 +206,6 @@
             border: 1px solid rgba(255, 255, 255, 0.6);
             transition: transform 0.3s;
             height: 100%;
-            /* Yükseklikleri eşitlemek için */
         }
 
         .card:hover,
@@ -233,7 +232,7 @@
             color: #0f3e71;
         }
 
-        /* ÖZELLİK 2: KIYASLAMA BADGE STİLİ */
+        /* KIYASLAMA BADGE STİLİ */
         .comparison-badge {
             font-size: 0.85rem;
             padding: 6px 10px;
@@ -260,7 +259,7 @@
             background: #f4f6f7;
         }
 
-        /* TIPS LIST (Eski Ferah Tasarım) */
+        /* TIPS LIST */
         .tips-box {
             padding: 30px;
         }
@@ -313,7 +312,7 @@
             margin: 0;
         }
 
-        /* ÖZELLİK 3: PROGRESS BARS */
+        /* PROGRESS BARS */
         .progress-item {
             margin-bottom: 15px;
         }
@@ -516,7 +515,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // 1. İpuçları Renklendirme
+            // İpuçları Renklendirme
             document.querySelectorAll('.tip-item').forEach(item => {
                 const color = item.getAttribute('data-color');
                 if (color) {
@@ -525,7 +524,7 @@
                 }
             });
 
-            // 2. Progress Bar Animasyonu
+            // Progress Bar Animasyonu
             const colors = ['#3498db', '#e74c3c', '#f1c40f', '#2ecc71', '#9b59b6', '#34495e', '#1abc9c', '#e67e22'];
             document.querySelectorAll('.progress-fill').forEach((bar, index) => {
                 const width = bar.getAttribute('data-width');
@@ -536,14 +535,14 @@
             });
         });
 
-        // 3. Flatpickr
+        // Flatpickr
         flatpickr("#monthPicker", {
             plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y", theme: "light" })],
             defaultDate: "{{ selected_month }}",
             static: true
         });
 
-        // 4. Pie Chart
+        // Pie Chart
         const ctxPie = document.getElementById('categoryChart').getContext('2d');
         const pieLabels = JSON.parse('{{ chart_labels|tojson|safe }}');
         const pieValues = JSON.parse('{{ chart_values|tojson|safe }}');
@@ -563,7 +562,7 @@
             });
         }
 
-        // 5. Line Chart (Günlük Trend)
+        // Line Chart (Günlük Trend)
         const ctxDaily = document.getElementById('dailyChart').getContext('2d');
         const dailyLabels = JSON.parse('{{ daily_labels|tojson|safe }}');
         const dailyValues = JSON.parse('{{ daily_values|tojson|safe }}');

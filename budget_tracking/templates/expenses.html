@@ -19,7 +19,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #f3f6f9, #dce4ef); /* Daha yumuşak, modern gri-mavi tonları */
+            background: linear-gradient(135deg, #f3f6f9, #dce4ef); 
             min-height: 100vh;
             color: #333;
         }
@@ -27,7 +27,7 @@
         /* --- HEADER STYLES --- */
         header {
             display: flex;
-            justify-content: space-between; /* Başlık ve profil arası mesafe */
+            justify-content: space-between; 
             align-items: center;
             position: relative;
             width: 100%;
@@ -61,7 +61,7 @@
             font-weight: 500;
             color: #0f3e71;
             padding: 8px 15px;
-            border-radius: 30px; /* Tam yuvarlak kenarlar modern durur */
+            border-radius: 30px;
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
@@ -109,7 +109,7 @@
         }
         
         .dropdown-menu button:before {
-            content: '\f2f5'; /* FontAwesome logout icon code (isteğe bağlı) */
+            content: '\f2f5'; 
             font-family: "Font Awesome 6 Free";
             font-weight: 900;
             margin-right: 8px;
@@ -127,7 +127,6 @@
 
         .sidebar {
             width: 260px;
-            /* Hafif degrade ile derinlik */
             background: linear-gradient(180deg, #0f3e71 0%, #0a2a4d 100%);
             color: white;
             padding: 30px 0;
@@ -138,11 +137,11 @@
             height: 100vh;
         }
 
-        /* LOGO VE BAŞLIK DÜZENİ (GÜNCELLENDİ) */
+        /* LOGO VE BAŞLIK DÜZENİ */
         .sidebar-header {
-            display: flex;              /* Yan yana dizilim */
-            align-items: center;        /* Dikey ortalama */
-            justify-content: center;    /* Yatay ortalama */
+            display: flex;              
+            align-items: center;       
+            justify-content: center;    
             padding: 0 10px 10px;
             margin-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -152,9 +151,9 @@
         }
 
         .sidebar-logo {
-            height: 40px;       /* Logo yüksekliği */
-            width: auto;        /* Orantılı genişlik */
-            margin-right: 12px; /* Yazı ile logo arası boşluk */
+            height: 40px;       
+            width: auto;        
+            margin-right: 12px; 
             object-fit: contain;
         }
 
@@ -171,7 +170,7 @@
             color: rgba(255, 255, 255, 0.8);
             font-size: 15px;
             transition: all 0.3s ease;
-            border-left: 4px solid transparent; /* Hover efekti için hazırlık */
+            border-left: 4px solid transparent; 
         }
 
         .sidebar ul li a i {
@@ -187,12 +186,12 @@
         .sidebar ul li.active a {
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
-            border-left-color: #4facfe; /* Accent rengi */
-            padding-left: 30px; /* Sağa kayma efekti */
+            border-left-color: #4facfe; 
+            padding-left: 30px; 
         }
 
         .sidebar ul li a:hover i {
-            transform: scale(1.2); /* İkonun büyümesi */
+            transform: scale(1.2); 
         }
 
         /* --- MAIN CONTENT & CONTAINERS --- */
@@ -207,22 +206,19 @@
             margin: 0 auto;
         }
 
-        /* Ortak Kart Stili */
         .form-container,
         .table-container,
         .filter-container {
             background: white;
-            border-radius: 20px; /* Daha yuvarlak köşeler */
+            border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
-            /* Yumuşak gölge */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            /* Hover animasyonu için geçiş */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: 1px solid rgba(255,255,255,0.5);
         }
 
-        /* Kartlara hover efekti - Modern Dokunuş */
+        /* Kartlara hover efekti */
         .form-container:hover,
         .table-container:hover,
         .filter-container:hover {
@@ -323,7 +319,7 @@
         table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0; /* Köşe yuvarlama için */
+            border-spacing: 0; 
         }
 
         th {
